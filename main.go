@@ -9,13 +9,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"fmt"
 
 	"github.com/alexflint/go-arg"
 	"github.com/google/go-containerregistry/authn"
 	"github.com/google/go-containerregistry/name"
-	"github.com/google/go-containerregistry/v1"
+	v1 "github.com/google/go-containerregistry/v1"
 	"github.com/google/go-containerregistry/v1/mutate"
 	"github.com/google/go-containerregistry/v1/remote"
 	"github.com/google/go-containerregistry/v1/tarball"
@@ -94,6 +95,10 @@ func applyConfig(image v1.Image, env []string, cmd string) (v1.Image, error) {
 	newImage, err := mutate.Config(image, imageConfig.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "applying new config")
+	}
+	newImage, err = mutate.CreatedAt(image, v1.Time{Time: time.Now()})
+	if err != nil {
+		return nil, errors.Wrap(err, "setting created-at timestamp")
 	}
 
 	return newImage, nil
