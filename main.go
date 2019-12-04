@@ -96,7 +96,7 @@ func applyConfig(image v1.Image, env []string, cmd string) (v1.Image, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "applying new config")
 	}
-	newImage, err = mutate.CreatedAt(image, v1.Time{Time: time.Now()})
+	newImage, err = mutate.CreatedAt(newImage, v1.Time{Time: time.Now()})
 	if err != nil {
 		return nil, errors.Wrap(err, "setting created-at timestamp")
 	}
