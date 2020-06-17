@@ -3,6 +3,13 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
+
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,12 +21,6 @@ import (
 	"fmt"
 
 	"github.com/alexflint/go-arg"
-	"github.com/google/go-containerregistry/authn"
-	"github.com/google/go-containerregistry/name"
-	v1 "github.com/google/go-containerregistry/v1"
-	"github.com/google/go-containerregistry/v1/mutate"
-	"github.com/google/go-containerregistry/v1/remote"
-	"github.com/google/go-containerregistry/v1/tarball"
 	"github.com/pkg/errors"
 )
 
