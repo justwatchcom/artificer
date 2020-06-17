@@ -45,7 +45,7 @@ func run() error {
 
 	fmt.Println("Checking base image...")
 
-	baseImage, repository, err := getImage(p.BaseImage)
+	baseImage, _, err := getImage(p.BaseImage)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func run() error {
 
 	fmt.Println("Pushing...")
 
-	if err := pushImage(finalImage, repository, p.Target); err != nil {
+	if err := pushImage(finalImage, p.Target); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func addNewLayerFromFiles(image v1.Image, files []string) (v1.Image, error) {
 	return image, nil
 }
 
-func pushImage(image v1.Image, repository name.Repository, destURL string) error {
+func pushImage(image v1.Image, destURL string) error {
 	destRef, err := name.ParseReference(destURL, name.WeakValidation)
 	if err != nil {
 		return errors.Wrapf(err, "parsing destination URL (%s)", destURL)
@@ -140,9 +140,7 @@ func pushImage(image v1.Image, repository name.Repository, destURL string) error
 		return errors.Wrapf(err, "authenticating target (%s)", destURL)
 	}
 
-	return remote.WriteLayer(repository, remote.MountableLayer{
-		Reference: destRef,
-	}, remote.WithAuth(pushAuth), remote.WithTransport(http.DefaultTransport))
+	return remote.Write(destRef, image, remote.WithAuth(pushAuth), remote.WithTransport(http.DefaultTransport))
 }
 
 func getImage(sourceURL string) (v1.Image, name.Repository, error) {
