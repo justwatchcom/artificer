@@ -3,6 +3,13 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
+
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,12 +21,6 @@ import (
 	"fmt"
 
 	"github.com/alexflint/go-arg"
-	"github.com/google/go-containerregistry/authn"
-	"github.com/google/go-containerregistry/name"
-	v1 "github.com/google/go-containerregistry/v1"
-	"github.com/google/go-containerregistry/v1/mutate"
-	"github.com/google/go-containerregistry/v1/remote"
-	"github.com/google/go-containerregistry/v1/tarball"
 	"github.com/pkg/errors"
 )
 
@@ -44,7 +45,7 @@ func run() error {
 
 	fmt.Println("Checking base image...")
 
-	baseImage, repository, err := getImage(p.BaseImage)
+	baseImage, _, err := getImage(p.BaseImage)
 	if err != nil {
 		return err
 	}
@@ -58,9 +59,7 @@ func run() error {
 
 	fmt.Println("Pushing...")
 
-	if err := pushImage(finalImage, []name.Repository{
-		repository,
-	}, p.Target); err != nil {
+	if err := pushImage(finalImage, p.Target); err != nil {
 		return err
 	}
 
@@ -130,7 +129,7 @@ func addNewLayerFromFiles(image v1.Image, files []string) (v1.Image, error) {
 	return image, nil
 }
 
-func pushImage(image v1.Image, repositories []name.Repository, destURL string) error {
+func pushImage(image v1.Image, destURL string) error {
 	destRef, err := name.ParseReference(destURL, name.WeakValidation)
 	if err != nil {
 		return errors.Wrapf(err, "parsing destination URL (%s)", destURL)
@@ -141,10 +140,7 @@ func pushImage(image v1.Image, repositories []name.Repository, destURL string) e
 		return errors.Wrapf(err, "authenticating target (%s)", destURL)
 	}
 
-	wo := remote.WriteOptions{}
-	wo.MountPaths = repositories
-
-	return remote.Write(destRef, image, pushAuth, http.DefaultTransport, wo)
+	return remote.Write(destRef, image, remote.WithAuth(pushAuth), remote.WithTransport(http.DefaultTransport))
 }
 
 func getImage(sourceURL string) (v1.Image, name.Repository, error) {
@@ -158,7 +154,7 @@ func getImage(sourceURL string) (v1.Image, name.Repository, error) {
 		return nil, name.Repository{}, errors.Wrap(err, "authenticating")
 	}
 
-	img, err := remote.Image(ref, auth, http.DefaultTransport)
+	img, err := remote.Image(ref, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
 	if err != nil {
 		return nil, name.Repository{}, errors.Wrap(err, "fetching")
 	}
