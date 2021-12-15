@@ -1,4 +1,4 @@
-module github.com/simonfrey/artificer
+module github.com/justwatchcom/artificer
 
 go 1.14
 
